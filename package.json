@@ -1,0 +1,24 @@
+{
+	"name": "ez-repldb",
+	"version": "1.0.11",
+	"description": "Use Replit's database with ease with EZReplDB!",
+	"main": "index.js",
+	"author": {
+		"name": "Matthew James",
+		"email": "mattdestroyerpro@gmail.com",
+		"url": "https://mattdestroyer.repl.co"
+	},
+	"contributors": [
+		{
+			"name": "Matthew James",
+			"email": "mattdestroyerpro@gmail.com",
+			"url": "https://mattdestroyer.repl.co"
+		}
+	],
+	"keywords": [
+		"replit",
+		"database",
+		"repl-db"
+	],
+	"license": "MIT"
+}
