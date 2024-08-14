@@ -1,0 +1,39 @@
+name: NPM Publish
+
+# attempt to publish every commit to NPM (will only succeed when version is bumped)
+on:
+  push:
+    branches:
+      - main
+# ensure the cwd is always `/`
+defaults:
+  run:
+    shell: bash
+    working-directory: ./
+# steps
+jobs:
+  # run tests
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm test
+  # publish to npm (will fail if version not bumped)
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+          scope: "@matthewjames/ez-repldb"
+      - run: npm ci
+      - run: npm publish --access=public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
