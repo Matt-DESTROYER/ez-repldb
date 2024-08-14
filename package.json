@@ -15,6 +15,9 @@
 			"url": "https://mattdestroyer.repl.co"
 		}
 	],
+	"scripts": {
+		"test": "node ./tests/index.mjs"
+	}
 	"keywords": [
 		"replit",
 		"database",
