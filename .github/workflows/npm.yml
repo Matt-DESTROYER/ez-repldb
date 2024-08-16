@@ -1,5 +1,4 @@
 name: NPM Publish
-
 # attempt to publish every commit to NPM (will only succeed when version is bumped)
 on:
   push:
