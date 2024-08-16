@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - main
-# ensure the cwd is always `/`
+# ensure the cwd is always `/src`
 defaults:
   run:
     shell: bash
-    working-directory: ./
+    working-directory: ./src
 # steps
 jobs:
   # run tests
