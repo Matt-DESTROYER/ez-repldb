@@ -4,14 +4,14 @@
 [![Downloads/month](https://img.shields.io/npm/dm/ez-repldb.svg?style=flat)](https://www.npmjs.com/package/ez-repldb)
 
 # EZReplDB
-EZReplDB is a quick and easy way to interact with Replit's database with next to no set up.
+Easy Repl DB is a quick and easy way to interact with Replit's database with next to no set up required.
 
 ## Using EZReplDB
 ```js
-// require EZReplDB and store it in a variable
 const db = require("ez-repldb");
 ```
 Yep, that's all you need to do, you can start using the database right away!
+(By default this will automatically connect to your database, however it is also possible to customise which database this connects to; see `db.url`.)
 
 ## Methods
 These are methods of the exported database object.
