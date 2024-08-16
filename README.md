@@ -1,7 +1,7 @@
-[![Version badge](https://img.shields.io/npm/v/ez-repldb.svg?style=flat)](https://www.npmjs.com/package/ez-repldb)
+[![Version](https://img.shields.io/npm/v/ez-repldb.svg?style=flat)](https://www.npmjs.com/package/ez-repldb)
 [![Install size](https://packagephobia.com/badge?p=ez-repldb)](https://www.npmjs.com/package/ez-repldb)
-[![Install size](https://img.shields.io/bundlephobia/minzip/ez-repldb?style=flat)](https://www.npmjs.com/package/ez-repldb)
-[![Install size](https://img.shields.io/npm/dm/ez-repldb.svg?style=flat)](https://www.npmjs.com/package/ez-repldb)
+[![Minzipped size](https://img.shields.io/bundlephobia/minzip/ez-repldb?style=flat)](https://www.npmjs.com/package/ez-repldb)
+[![Downloads/month](https://img.shields.io/npm/dm/ez-repldb.svg?style=flat)](https://www.npmjs.com/package/ez-repldb)
 
 # EZReplDB
 EZReplDB is a quick and easy way to interact with Replit's database with next to no set up.
