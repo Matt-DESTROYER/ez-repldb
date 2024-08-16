@@ -1,6 +1,6 @@
 {
 	"name": "ez-repldb",
-	"version": "1.0.12",
+	"version": "1.0.13",
 	"description": "Use Replit's database with ease with EZReplDB!",
 	"main": "index.js",
 	"author": {
