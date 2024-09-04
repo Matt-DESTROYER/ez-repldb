@@ -6,14 +6,14 @@ const _cache = new Map();
 const _cacheProxy = new Proxy(_cache, Object.freeze({
 	get(cache, key, value) {
 		if (value) {
-			return cache.set(key, value);
+			return db.set(key, value);
 		}
 		return cache.get(prop);
 	}
 }));
-let _cachingEnabled = !0;
+let _cachingEnabled = true;
 
-module.exports = {
+const db = {
 	get url() { return _url; },
 	set url(value) {
 		_url = value;
@@ -27,16 +27,19 @@ module.exports = {
 	set cache(value) { },
 	get cachingEnabled() { return _cachingEnabled; },
 	set cachingEnabled(value) { _cachingEnabled = Boolean(value); },
-	get: (...args) => new Promise(function(e) {
-		if (0 === args.length) e(null);
-		else if (1 === args.length) {
-			if (_cachingEnabled && args[0] in _cacheProxy) return e(_cacheProxy[args[0]]);
+	get: (...args) => new Promise(function(resolve, reject) {
+		if (args.length === 0) {
+			resolve(null);
+		} else if (args.length === 1) {
+			if (_cachingEnabled && _cache.get(args[0])) {
+				return resolve(_cache.get(args[0]));
+			}
 			fetch(_url + "/" + encodeURIComponent(args[0].toString())).then(function(t) {
 				return t.text()
 			}).then(function(n) {
-				e(_cacheProxy[args[0]] = JSON.parse(n))
+				resolve(_cacheProxy[args[0]] = JSON.parse(n))
 			}).catch(function() {
-				e(null)
+				resolve(null)
 			})
 		} else {
 			let n = Array(args.length);
@@ -54,29 +57,34 @@ module.exports = {
 				})
 			}
 			Promise.all(n).then(function(t) {
-				e(t)
+				resolve(t)
 			})
 		}
 	}),
 	set(...args) {
 		let e = [];
-		for (let n = 0; n < args.length - 1; n += 2) _cacheProxy[args[n]] = args[n + 1], e.push(encodeURIComponent(args[n].toString()) + "=" + encodeURIComponent(JSON.stringify(args[n + 1])));
+		for (let i = 0; i < args.length - 1; i += 2) {
+			_cacheProxy[args[i]] = args[i + 1];
+			e.push(encodeURIComponent(args[i].toString()) + "=" + encodeURIComponent(JSON.stringify(args[i + 1])));
+		}
 		return fetch(_url + "?" + e.join("&"), {
 			method: "POST"
-		}).then(function() {
-			return !0
-		}).catch(function() {
-			return !1
 		})
+			.then(function() {
+				return true
+			})
+			.catch(function() {
+				return false
+			});
 	},
 	delete: (...args) => new Promise(function(e) {
-		if (0 === args.length) e(!0);
+		if (0 === args.length) e(true);
 		else if (1 === args.length) args[0] in _cacheProxy && delete _cacheProxy[args[0]], fetch(_url + "/" + encodeURIComponent(args[0].toString()), {
 			method: "DELETE"
 		}).then(function() {
-			e(!0)
+			e(true)
 		}).catch(function() {
-			e(!1)
+			e(false)
 		});
 		else {
 			let n = Array(args.length);
@@ -84,9 +92,9 @@ module.exports = {
 				args[r] in _cacheProxy && delete _cacheProxy[args[r]], fetch(_url + "/" + encodeURIComponent(args[r].toString()), {
 					method: "DELETE"
 				}).then(function() {
-					e(!0)
+					e(true)
 				}).catch(function() {
-					e(!1)
+					e(false)
 				})
 			});
 			Promise.all(n).then(function(t) {
@@ -142,7 +150,7 @@ module.exports = {
 	cache: () => fetch(_url + "?encode=true&prefix=").then(function(t) {
 		return t.text()
 	}).then(function(t) {
-		if ("" === t) return !0;
+		if ("" === t) return true;
 		let e = t.split("\n");
 		for (let n = 0; n < e.length; n++) e[n] = decodeURIComponent(e[n]);
 		let r = [];
@@ -157,12 +165,12 @@ module.exports = {
 			}))
 		}
 		return Promise.all(r).then(function() {
-			return !0
+			return true
 		}).catch(function() {
-			return !1
+			return false
 		})
 	}).catch(function() {
-		return !1
+		return false
 	}),
 	clear: () => fetch(_url + "?encode=true&prefix=").then(function(t) {
 		return t.text()
@@ -177,9 +185,9 @@ module.exports = {
 				fetch(_url + "/" + encodeURIComponent(e[u]), {
 					method: "DELETE"
 				}).then(function() {
-					keys[u] in _cacheProxy && delete _cacheProxy[keys[u]], t(!0)
+					keys[u] in _cacheProxy && delete _cacheProxy[keys[u]], t(true)
 				}).catch(function() {
-					t(!1)
+					t(false)
 				})
 			}))
 		}
@@ -212,15 +220,15 @@ module.exports = {
 		return fetch(_url + "?" + e.join("&"), {
 			method: "POST"
 		}).then(function() {
-			return !0
+			return true
 		}).catch(function() {
-			return !1
+			return false
 		})
 	},
 	import: t => fetch(t + "?encode=true&prefix=").then(function(t) {
 		return t.text()
 	}).then(function(e) {
-		if ("" === e) return console.log("Input database is empty."), !0;
+		if ("" === e) return console.log("Input database is empty."), true;
 		let n = e.split("\n"),
 			r = Array(n.length),
 			c = [];
@@ -246,14 +254,16 @@ module.exports = {
 				for (let t = 0; t < r.length; t++) null !== r[t] && (n.splice(t, 1), r.splice(t, 1));
 				return n.length > 0 && console.warn("The following keys returned null values (this may indicate an error at some point during the import process or in the processes that generated these keys in the first place): " + n.map(function(t) {
 					return '"' + t + '"'
-				}).join(", ")), !0
+				}).join(", ")), true
 			}).catch(function() {
-				return console.warn("An unexpected error occurred attempting to set the key-value pairs in the current database."), !1
+				return console.warn("An unexpected error occurred attempting to set the key-value pairs in the current database."), false
 			})
 		}).catch(function() {
-			return console.warn("An unexpected error occurred reading from the input database (please ensure you use the correct URL)."), !1
+			return console.warn("An unexpected error occurred reading from the input database (please ensure you use the correct URL)."), false
 		})
 	}).catch(function() {
-		return console.warn("An unexpected error occurred reading from the input database (please ensure you use the correct URL)."), !1
+		return console.warn("An unexpected error occurred reading from the input database (please ensure you use the correct URL)."), false
 	})
 };
+
+module.exports = db;
