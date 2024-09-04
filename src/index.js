@@ -2,7 +2,15 @@ let _url = process.env.REPLIT_DB_URL || "";
 const _host = "kv.replit.com";
 let _path = _url.substr(21);
 
-const _cache = {};
+const _cache = new Map();
+const _cacheProxy = new Proxy(_cache, Object.freeze({
+	get(cache, key, value) {
+		if (value) {
+			return cache.set(key, value);
+		}
+		return cache.get(prop);
+	}
+}));
 let _cachingEnabled = !0;
 
 module.exports = {
@@ -15,18 +23,18 @@ module.exports = {
 	set host(value) { },
 	get path() { return _path; },
 	set path(value) { },
-	get cache() { return _cache; },
+	get cache() { return _cacheProxy; },
 	set cache(value) { },
 	get cachingEnabled() { return _cachingEnabled; },
 	set cachingEnabled(value) { _cachingEnabled = Boolean(value); },
 	get: (...args) => new Promise(function(e) {
 		if (0 === args.length) e(null);
 		else if (1 === args.length) {
-			if (_cachingEnabled && args[0] in _cache) return e(_cache[args[0]]);
+			if (_cachingEnabled && args[0] in _cacheProxy) return e(_cacheProxy[args[0]]);
 			fetch(_url + "/" + encodeURIComponent(args[0].toString())).then(function(t) {
 				return t.text()
 			}).then(function(n) {
-				e(_cache[args[0]] = JSON.parse(n))
+				e(_cacheProxy[args[0]] = JSON.parse(n))
 			}).catch(function() {
 				e(null)
 			})
@@ -35,11 +43,11 @@ module.exports = {
 			for (let r = 0; r < args.length; r++) {
 				let c = r;
 				n[c] = new Promise(function(e) {
-					if (_cachingEnabled && args[c] in _cache) return e(_cache[args[c]]);
+					if (_cachingEnabled && args[c] in _cacheProxy) return e(_cacheProxy[args[c]]);
 					fetch(_url + "/" + encodeURIComponent(args[c].toString())).then(function(t) {
 						return t.text()
 					}).then(function(n) {
-						e(_cache[args[c]] = JSON.parse(n))
+						e(_cacheProxy[args[c]] = JSON.parse(n))
 					}).catch(function() {
 						e(null)
 					})
@@ -52,7 +60,7 @@ module.exports = {
 	}),
 	set(...args) {
 		let e = [];
-		for (let n = 0; n < args.length - 1; n += 2) _cache[args[n]] = args[n + 1], e.push(encodeURIComponent(args[n].toString()) + "=" + encodeURIComponent(JSON.stringify(args[n + 1])));
+		for (let n = 0; n < args.length - 1; n += 2) _cacheProxy[args[n]] = args[n + 1], e.push(encodeURIComponent(args[n].toString()) + "=" + encodeURIComponent(JSON.stringify(args[n + 1])));
 		return fetch(_url + "?" + e.join("&"), {
 			method: "POST"
 		}).then(function() {
@@ -63,7 +71,7 @@ module.exports = {
 	},
 	delete: (...args) => new Promise(function(e) {
 		if (0 === args.length) e(!0);
-		else if (1 === args.length) args[0] in _cache && delete _cache[args[0]], fetch(_url + "/" + encodeURIComponent(args[0].toString()), {
+		else if (1 === args.length) args[0] in _cacheProxy && delete _cacheProxy[args[0]], fetch(_url + "/" + encodeURIComponent(args[0].toString()), {
 			method: "DELETE"
 		}).then(function() {
 			e(!0)
@@ -73,7 +81,7 @@ module.exports = {
 		else {
 			let n = Array(args.length);
 			for (let r = 0; r < args.length; r++) n[r] = new Promise(function(e) {
-				args[r] in _cache && delete _cache[args[r]], fetch(_url + "/" + encodeURIComponent(args[r].toString()), {
+				args[r] in _cacheProxy && delete _cacheProxy[args[r]], fetch(_url + "/" + encodeURIComponent(args[r].toString()), {
 					method: "DELETE"
 				}).then(function() {
 					e(!0)
@@ -100,7 +108,7 @@ module.exports = {
 		if (_cachingEnabled) {
 			return new Promise(function(t, e) {
 				let n = {};
-				for (let r in _cache) n[r] = _cache[r];
+				for (let r in _cacheProxy) n[r] = _cacheProxy[r];
 				t(n)
 			});
 		}
@@ -117,9 +125,9 @@ module.exports = {
 				c.push(fetch(_url + "/" + encodeURIComponent(l.toString())).then(function(t) {
 					return t.text()
 				}).then(function(e) {
-					return e = JSON.parse(e), _cache[l] = e, t[l] = e, t[l]
+					return e = JSON.parse(e), _cacheProxy[l] = e, t[l] = e, t[l]
 				}).catch(function() {
-					return t[l] = _cache[l] || null, t[l]
+					return t[l] = _cacheProxy[l] || null, t[l]
 				}))
 			}
 			return Promise.all(c).then(function() {
@@ -143,7 +151,7 @@ module.exports = {
 			r.push(fetch(_url + "/" + encodeURIComponent(e[u].toString())).then(function(t) {
 				return t.text()
 			}).then(function(t) {
-				return _cache[e[u]] = JSON.parse(t)
+				return _cacheProxy[e[u]] = JSON.parse(t)
 			}).catch(function() {
 				return null
 			}))
@@ -169,7 +177,7 @@ module.exports = {
 				fetch(_url + "/" + encodeURIComponent(e[u]), {
 					method: "DELETE"
 				}).then(function() {
-					keys[u] in _cache && delete _cache[keys[u]], t(!0)
+					keys[u] in _cacheProxy && delete _cacheProxy[keys[u]], t(!0)
 				}).catch(function() {
 					t(!1)
 				})
@@ -187,9 +195,9 @@ module.exports = {
 			fetch(_url + "/" + encodeURIComponent(n)).then(function(t) {
 				return t.text()
 			}).then(function(r) {
-				_cache[n] = t[n] = JSON.parse(r), e()
+				_cacheProxy[n] = t[n] = JSON.parse(r), e()
 			}).catch(function() {
-				_cache[n] = t[n] = t[n] || null, e()
+				_cacheProxy[n] = t[n] = t[n] || null, e()
 			})
 		}));
 		return Promise.all(e).then(function() {
@@ -200,7 +208,7 @@ module.exports = {
 	},
 	applyObject(t) {
 		let e = [];
-		for (let n in t) Object.prototype.hasOwnProperty.call(t, n) && (_cache[n] = t[n], e.push(n + "=" + decodeURIComponent(JSON.stringify(t[n]))));
+		for (let n in t) Object.prototype.hasOwnProperty.call(t, n) && (_cacheProxy[n] = t[n], e.push(n + "=" + decodeURIComponent(JSON.stringify(t[n]))));
 		return fetch(_url + "?" + e.join("&"), {
 			method: "POST"
 		}).then(function() {
@@ -221,9 +229,9 @@ module.exports = {
 			n[l] = decodeURIComponent(n[l]), c.push(fetch(t + "/" + encodeURIComponent(n[l])).then(function(t) {
 				return t.text()
 			}).then(function(t) {
-				return _cache[n[l]] = r[l] = JSON.parse(t)
+				return _cacheProxy[n[l]] = r[l] = JSON.parse(t)
 			}).catch(function() {
-				return _cache[n[l]] = r[l] = null
+				return _cacheProxy[n[l]] = r[l] = null
 			}))
 		}
 		return Promise.all(c).then(function() {
